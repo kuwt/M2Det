@@ -101,6 +101,7 @@ if cam >= 0 or video:
 im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] == '.jpg'))
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 im_iter = iter(im_fnames)
+index = 0
 while True:
     if cam < 0 and not video:
         try:
@@ -153,17 +154,23 @@ while True:
     if im2show.shape[0] > 1100:
         im2show = cv2.resize(im2show,
                              (int(1000. * float(im2show.shape[1]) / im2show.shape[0]), 1000))
-    if args.show:
-        cv2.imshow('test', im2show)
-        if cam < 0 and not video:
-            cv2.waitKey(5000)
-        else:
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                cv2.destroyAllWindows()
-                out_video.release()
-                capture.release()
-                break
-    if cam < 0 and not video:
-        cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
-    else:
-        out_video.write(im2show)
+    
+   
+    
+    outfileName = 'test_{}.jpg'.format(index)
+    cv2.imwrite( outfileName, im2show)
+    index = index + 1
+    # if args.show:
+        # cv2.imshow('test', im2show)
+        # if cam < 0 and not video:
+            # cv2.waitKey(5000)
+        # else:
+            # if cv2.waitKey(1) & 0xFF == ord('q'):
+                # cv2.destroyAllWindows()
+                # out_video.release()
+                # capture.release()
+                # break
+    # if cam < 0 and not video:
+        # cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
+    # else:
+        # out_video.write(im2show)
