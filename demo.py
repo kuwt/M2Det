@@ -89,8 +89,8 @@ def draw_detection(im, bboxes, scores, cls_inds, fps, thr=0.2):
 
  ##################### main loop #############################
 im_path = args.directory
-
-im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] == '.jpg'))
+extension = '.bmp'
+im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] == extension))
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 im_iter = iter(im_fnames)
 index = 0
@@ -102,7 +102,7 @@ while True:
         break
     if 'm2det' in fname: continue # ignore the detected images
     image = cv2.imread(fname, cv2.IMREAD_COLOR)
-   
+    print("image {}".format(fname))
     ########### preprocess ############
     loop_start = time.time()
     w,h = image.shape[1],image.shape[0]

@@ -1,0 +1,25 @@
+// training
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --ngpu 4
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/M2Det_COCO_size512_netvgg16_epoch30.pth --ngpu 4
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4 --dataset custom
+
+// evaluation
+python test.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth 
+
+//demo
+python demo.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth
+python demo.py -c=configs/m2det512_vgg.py -m=weights/M2Det_custom_size512_netvgg16_epoch150.pth
+
+Q. when change image size from arbitrary to 512 x 512?
+A. in preproc
+
+Q. how to handle no target box
+
+Q. Why the offical check pt cost is much lower than mine?
+
+Q. How to verify the result.
+
+Next:
+tensorboard
+custom dataset
