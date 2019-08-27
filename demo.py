@@ -17,8 +17,7 @@ parser = argparse.ArgumentParser(description='M2Det Testing')
 parser.add_argument('-c', '--config', default='configs/m2det320_vgg.py', type=str)
 parser.add_argument('-f', '--directory', default='imgs/', help='the path to demo images')
 parser.add_argument('-m', '--trained_model', default=None, type=str, help='Trained state_dict file path to open')
-parser.add_argument('--video', default=False, type=bool, help='videofile mode')
-parser.add_argument('--cam', default=-1, type=int, help='camera device id')
+
 parser.add_argument('--show', action='store_true', help='Whether to display the images')
 args = parser.parse_args()
 
@@ -26,17 +25,23 @@ print_info(' -------------------------------------------------------------------
            '|                       M2Det Demo Program                             |\n'
            ' ----------------------------------------------------------------------', ['yellow','bold'])
 
+ ##################### config #############################
 global cfg
 cfg = Config.fromfile(args.config)
+
+ #################### anchorbox ###########
 anchor_config = anchors(cfg)
 print_info('The Anchor info: \n{}'.format(anchor_config))
 priorbox = PriorBox(anchor_config)
+
+ ##################### net #############################
 net = build_net('test',
                 size = cfg.model.input_size,
                 config = cfg.model.m2det_config)
 init_net(net, cfg, args.trained_model)
 print_info('===> Finished constructing and loading model',['yellow','bold'])
 net.eval()
+
 with torch.no_grad():
     priors = priorbox.forward()
     if cfg.test_cfg.cuda:
@@ -46,6 +51,8 @@ with torch.no_grad():
     else:
         net = net.cpu()
 _preprocess = BaseTransform(cfg.model.input_size, cfg.model.rgb_means, (2, 0, 1))
+
+ ##################### detector #############################
 detector = Detect(cfg.model.m2det_config.num_classes, cfg.loss.bkg_label, anchor_config)
 
 def _to_color(indx, base):
@@ -80,52 +87,39 @@ def draw_detection(im, bboxes, scores, cls_inds, fps, thr=0.2):
 
     return imgcv
 
+ ##################### main loop #############################
 im_path = args.directory
-cam = args.cam
-video = args.video
-if cam >= 0:
-    capture = cv2.VideoCapture(cam)
-    video_path = './cam'
-if video:
-    while True:
-        video_path = input('Please enter video path: ')
-        capture = cv2.VideoCapture(video_path)
-        if capture.isOpened():
-            break
-        else:
-            print('No file!')
-if cam >= 0 or video:
-    video_name = os.path.splitext(video_path)
-    fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
-    out_video = cv2.VideoWriter(video_name[0] + '_m2det.mp4', fourcc, capture.get(cv2.CAP_PROP_FPS), (int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)), int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+
 im_fnames = sorted((fname for fname in os.listdir(im_path) if os.path.splitext(fname)[-1] == '.jpg'))
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
 im_iter = iter(im_fnames)
 index = 0
 while True:
-    if cam < 0 and not video:
-        try:
-            fname = next(im_iter)
-        except StopIteration:
-            break
-        if 'm2det' in fname: continue # ignore the detected images
-        image = cv2.imread(fname, cv2.IMREAD_COLOR)
-    else:
-        ret, image = capture.read()
-        if not ret:
-            cv2.destroyAllWindows()
-            capture.release()
-            break
+    ########### get image ############
+    try:
+        fname = next(im_iter)
+    except StopIteration:
+        break
+    if 'm2det' in fname: continue # ignore the detected images
+    image = cv2.imread(fname, cv2.IMREAD_COLOR)
+   
+    ########### preprocess ############
     loop_start = time.time()
     w,h = image.shape[1],image.shape[0]
     img = _preprocess(image).unsqueeze(0)
+    
+    ########### put to gpu ############
     if cfg.test_cfg.cuda:
         img = img.cuda()
+
+    ########### forward ############
     scale = torch.Tensor([w,h,w,h])
     out = net(img)
     boxes, scores = detector.forward(out, priors)
     boxes = (boxes[0]*scale).cpu().numpy()
     scores = scores[0].cpu().numpy()
+
+    ########### bbox ############
     allboxes = []
     for j in range(1, cfg.model.m2det_config.num_classes):
         inds = np.where(scores[:,j] > cfg.test_cfg.score_threshold)[0]
@@ -140,6 +134,7 @@ while True:
         c_dets = c_dets[keep, :]
         allboxes.extend([_.tolist()+[j] for _ in c_dets])
 
+    ########### display and save ############
     loop_time = time.time() - loop_start
     allboxes = np.array(allboxes)
     boxes = allboxes[:,:4]
@@ -147,30 +142,14 @@ while True:
     cls_inds = allboxes[:,5]
     print('\n'.join(['pos:{}, ids:{}, score:{:.3f}'.format('(%.1f,%.1f,%.1f,%.1f)' % (o[0],o[1],o[2],o[3]) \
             ,labels[int(oo)],ooo) for o,oo,ooo in zip(boxes,cls_inds,scores)]))
-    fps = 1.0 / float(loop_time) if cam >= 0 or video else -1
-    im2show = draw_detection(image, boxes, scores, cls_inds, fps)
+ 
+    im2show = draw_detection(image, boxes, scores, cls_inds, 0)
     # print bbox_pred.shape, iou_pred.shape, prob_pred.shape
 
     if im2show.shape[0] > 1100:
         im2show = cv2.resize(im2show,
                              (int(1000. * float(im2show.shape[1]) / im2show.shape[0]), 1000))
     
-   
-    
     outfileName = 'test_{}.jpg'.format(index)
     cv2.imwrite( outfileName, im2show)
     index = index + 1
-    # if args.show:
-        # cv2.imshow('test', im2show)
-        # if cam < 0 and not video:
-            # cv2.waitKey(5000)
-        # else:
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-                # cv2.destroyAllWindows()
-                # out_video.release()
-                # capture.release()
-                # break
-    # if cam < 0 and not video:
-        # cv2.imwrite('{}_m2det.jpg'.format(fname.split('.')[0]), im2show)
-    # else:
-        # out_video.write(im2show)

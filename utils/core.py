@@ -10,6 +10,7 @@ from layers.functions import PriorBox
 from layers.modules import MultiBoxLoss
 from data import mk_anchors
 from data import COCODetection, VOCDetection, detection_collate, preproc
+from data import MyCustomDetection
 from configs.CC import Config
 from termcolor import cprint
 from utils.nms_wrapper import nms
@@ -86,14 +87,29 @@ def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_s
 
 def get_dataloader(cfg, dataset, setname='train_sets'):
     _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
-    Dataloader_function = {'VOC': VOCDetection, 'COCO':COCODetection}
+    Dataloader_function = {'VOC': VOCDetection, 'COCO':COCODetection, 'custom':MyCustomDetection.CustomDetection}
     _Dataloader_function = Dataloader_function[dataset]
-    if setname == 'train_sets':
-        dataset = _Dataloader_function(cfg.COCOroot if dataset == 'COCO' else cfg.VOCroot,
-                                   getattr(cfg.dataset, dataset)[setname], _preproc)
+    
+    if dataset == 'COCO':
+        root = cfg.COCOroot
+    elif dataset == 'VOC':
+        root = cfg.VOCroot
     else:
-        dataset = _Dataloader_function(cfg.COCOroot if dataset == 'COCO' else cfg.VOCroot,
-                                   getattr(cfg.dataset, dataset)[setname], None)
+        root = '.'
+    
+    if dataset == 'COCO':
+        insetName = getattr(cfg.dataset, dataset)[setname]
+    elif dataset == 'VOC':
+        insetName = getattr(cfg.dataset, dataset)[setname]
+    else:
+        insetName = ''
+    
+
+    if setname == 'train_sets':
+        dataset = _Dataloader_function(root, insetName, _preproc)
+    else:
+        dataset = _Dataloader_function(root, insetName, None)
+
     return dataset
     
 def print_train_log(iteration, print_epochs, info_list):

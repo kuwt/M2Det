@@ -27,13 +27,14 @@ model = dict(
 train_cfg = dict(
     cuda = True,
     warmup = 5,
-    per_batch_size = 16,
+    per_batch_size = 4,
     lr = [0.004, 0.002, 0.0004, 0.00004, 0.000004],
     gamma = 0.1,
     end_lr = 1e-6,
     step_lr = dict(
         COCO = [90, 110, 130, 150, 160],
         VOC = [100, 150, 200, 250, 300], # unsolve
+        custom = [90, 110, 130, 150, 160],
         ),
     print_epochs = 10,
     num_workers= 8,

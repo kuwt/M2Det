@@ -33,8 +33,8 @@ class COCODetection(data.Dataset):
         self.preproc = preproc
         self.target_transform = target_transform
         self.name = dataset_name
-        self.ids = list()
-        self.annotations = list()
+        self.ids = list()       # it is a list of strings
+        self.annotations = list() # it is list of numpy.ndarray
         self._view_map = {
             'minival2014' : 'val2014',          # 5k val2014 subset
             'valminusminival2014' : 'val2014',  # val2014 \setminus minival2014
@@ -63,8 +63,18 @@ class COCODetection(data.Dataset):
                 print('test set will not load annotations!')
             else:
                 self.annotations.extend(self._load_coco_annotations(coco_name, indexes,_COCO))
+        
+        for i,id in enumerate(self.ids):
+            if i >= 5:
+                break
+            print(id)        
 
-
+        for i,anno in enumerate(self.annotations):
+            if i >= 5:
+                break
+            print(type(anno))   
+            print(anno)       
+            
 
     def image_path_from_index(self, name, index):
         """
@@ -151,6 +161,7 @@ class COCODetection(data.Dataset):
         target = self.annotations[index]
         img = cv2.imread(img_id, cv2.IMREAD_COLOR)
         height, width, _ = img.shape
+        #print("target = ", target )
 
         if self.target_transform is not None:
             target = self.target_transform(target)
