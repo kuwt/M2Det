@@ -9,6 +9,10 @@ Author:  Qijie Zhao (zhaoqijie@pku.edu.cn)
 Finished Date:  01/17/2019
 
 '''
+
+isPrintLog = True
+import matplotlib
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -117,8 +121,9 @@ class M2Det(nn.Module):
                 )
 
         ## add display
-        #print("base_feature = {}".format(base_feature))
-        print("base_feature size = {}".format(base_feature.size()))
+        if isPrintLog == True:
+            #print("base_feature = {}".format(base_feature))
+            print("base_feature size = {}".format(base_feature.size()))
 
         # tum_outs is the multi-level multi-scale feature
         tum_outs = [getattr(self, 'unet{}'.format(1))(self.leach[0](base_feature), 'none')]
@@ -130,18 +135,30 @@ class M2Det(nn.Module):
                     )
 
         ## add display
-        print("len(tum_outs)= {}".format(len(tum_outs)))
-        print("len(tum_outs[0])= {}".format(len(tum_outs[0])))
-        for i,tmp in enumerate(tum_outs[0]):
-            print("tum_outs[0][{}].size() = {}".format(i,tmp.size()))
-        #print("tum_outs[0].size() = {}".format(tum_outs[0].size()))
+        if isPrintLog == True:
+            print("len(tum_outs)= {} --> level".format(len(tum_outs)))
+            print("len(tum_outs[0])= {} --> scales".format(len(tum_outs[0])))
+            for i,tmp in enumerate(tum_outs[0]):
+                print("tum_outs[0][{}].size() = {}".format(i,tmp.size()))
+            #print("tum_outs[0].size() = {}".format(tum_outs[0].size()))
+            with torch.no_grad():
+                for i,to in enumerate(tum_outs):
+                    for j,f in enumerate(to):
+                        sumMap = f.sum(1).sum(0)
+                        featureMapPlot = sumMap.cpu().detach().numpy()
+                        saveName = "tmp/activation/scale_{}_level_{}.png".format(j,i)
+                        matplotlib.image.imsave(saveName, featureMapPlot)
+            #a = tum_outs[0][5].sum(1).sum(0)
+            #print("a.size() = {}".format(a.size()))
+            #print("a= {}".format(a))    
     
         # concat with same scales
         sources = [torch.cat([_fx[i-1] for _fx in tum_outs],1) for i in range(self.num_scales, 0, -1)]
         
          ## add display
-        #print("sources[0] = {}".format(sources[0]))
-        print("sources[0].size() = {}".format(sources[0].size()))
+        if isPrintLog == True:
+            #print("sources[0] = {}".format(sources[0]))
+            print("sources[0].size() = {}".format(sources[0].size()))
 
         # forward_sfam
         if self.sfam:
@@ -153,16 +170,18 @@ class M2Det(nn.Module):
             conf.append(c(x).permute(0, 2, 3, 1).contiguous())
 
          ## add display
-        print("len(loc) = {}".format(len(loc)))
-        print("loc[0] = {}".format(loc[0].size()))
-        print("conf[0].size() = {}".format(conf[0].size()))
+        if isPrintLog == True:
+            print("len(loc) = {}".format(len(loc)))
+            print("loc[0] = {}".format(loc[0].size()))
+            print("conf[0].size() = {}".format(conf[0].size()))
 
         loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
         conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
 
         ## add display
-        print("loc.size() = {}".format(loc.size()))
-        print("conf.size() = {}".format(conf.size()))
+        if isPrintLog == True:
+            print("loc.size() = {}".format(loc.size()))
+            print("conf.size() = {}".format(conf.size()))
         
         if self.phase == "test":
             output = (

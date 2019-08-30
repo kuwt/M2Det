@@ -40,6 +40,11 @@ Q. WHat is the meaning of variance of anchor box
 A. A normalization constant for better machine learning as claimed here 
     https://leimao.github.io/blog/Bounding-Box-Encoding-Decoding/
 
+Q. how the feature map parameter is formed?
+A.  Determined by the input_size only  
+
+Q. and how the step_pattern is used?
+A. 
 
 network component:
 self.base
@@ -55,5 +60,8 @@ self.sfam_module
 
 
 Next plan:
-tensorboard
-custom dataset (done)
+tensorboard setup
+understand the network component (done)
+print anchor box size relative to images (already illustrated in the Anchor info)
+print multi level multi scale feature activation map (done)
+add validation set tot the training script

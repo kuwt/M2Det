@@ -1,3 +1,5 @@
+isPrintLog = True
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -82,8 +84,9 @@ class TUM(nn.Module):
             conved_feat.append(x)
         
         ## add display
-        for i,tmp in enumerate(conved_feat):
-            print("conved_feat[{}].size() = {}".format(i,tmp.size()))
+        if isPrintLog == True:
+            for i,tmp in enumerate(conved_feat):
+                print("conved_feat[{}].size() = {}".format(i,tmp.size()))
 
         deconved_feat = [self.toplayer[0](conved_feat[-1])]
         for i in range(len(self.latlayer)):
@@ -94,8 +97,9 @@ class TUM(nn.Module):
                     )
 
         ## add display
-        for i,tmp in enumerate(deconved_feat):
-            print("deconved_feat[{}].size() = {}".format(i,tmp.size()))
+        if isPrintLog == True:
+            for i,tmp in enumerate(deconved_feat):
+                print("deconved_feat[{}].size() = {}".format(i,tmp.size()))
 
         if self.is_smooth:
             smoothed_feat = [deconved_feat[0]]

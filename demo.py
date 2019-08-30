@@ -163,6 +163,6 @@ while True:
         im2show = cv2.resize(im2show,
                              (int(1000. * float(im2show.shape[1]) / im2show.shape[0]), 1000))
     
-    outfileName = 'test_{}.jpg'.format(index)
+    outfileName = 'tmp/result/test_{}.jpg'.format(index)
     cv2.imwrite( outfileName, im2show)
     index = index + 1

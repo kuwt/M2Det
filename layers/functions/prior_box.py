@@ -35,20 +35,21 @@ class PriorBox(object):
         for k, f in enumerate(self.feature_maps):
             for i, j in product(range(f), repeat=2):
                 f_k = self.image_size / self.steps[k]
+                # unit center x,y in the feature map
                 cx = (j + 0.5) / f_k
                 cy = (i + 0.5) / f_k
 
                 s_k = self.min_sizes[k]/self.image_size
-                mean += [cx, cy, s_k, s_k]
+                mean += [cx, cy, s_k, s_k]   # first anchor box
 
                 # aspect_ratio: 1
                 # rel size: sqrt(s_k * s_(k+1))
                 s_k_prime = sqrt(s_k * (self.max_sizes[k]/self.image_size))
-                mean += [cx, cy, s_k_prime, s_k_prime]
+                mean += [cx, cy, s_k_prime, s_k_prime]   # second anchor box
 
                 # rest of aspect ratios
                 for ar in self.aspect_ratios[k]:
-                    mean += [cx, cy, s_k*sqrt(ar), s_k/sqrt(ar)]
+                    mean += [cx, cy, s_k*sqrt(ar), s_k/sqrt(ar)]    # third to sixth anchor box
                     mean += [cx, cy, s_k/sqrt(ar), s_k*sqrt(ar)]
 
         # back to torch land
