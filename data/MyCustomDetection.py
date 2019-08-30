@@ -16,9 +16,8 @@ def classMap(inclass):
 
 class CustomDetection(data.Dataset):
 
-    def __init__(self, root, image_sets, preproc=None, target_transform=None,
-                 dataset_name='CustomDetection'):
-        self.root = "/srv/data/kuwingto/SAEcustomData/"
+    def __init__(self, root, preproc=None, target_transform=None, dataset_name='CustomDetection'):
+        self.root = root
         self.target_transform = target_transform
         self.preproc = preproc
         

@@ -3,7 +3,7 @@ COMMANDS
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --ngpu 4
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/M2Det_COCO_size512_netvgg16_epoch30.pth --ngpu 4
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4
-CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4 --dataset custom
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4 --dataset custom -t True
 
 // evaluation
 python test.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth 
@@ -41,10 +41,10 @@ A. A normalization constant for better machine learning as claimed here
     https://leimao.github.io/blog/Bounding-Box-Encoding-Decoding/
 
 Q. how the feature map parameter is formed?
-A.  Determined by the input_size only  
+A.  Determined by the input_size only and the magic number 6 feature maps
 
 Q. and how the step_pattern is used?
-A. 
+A. I think they are redundant as they can be computed by the size of feature map and input size
 
 network component:
 self.base
@@ -64,4 +64,4 @@ tensorboard setup
 understand the network component (done)
 print anchor box size relative to images (already illustrated in the Anchor info)
 print multi level multi scale feature activation map (done)
-add validation set tot the training script
+add validation set for the training script

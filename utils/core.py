@@ -84,26 +84,21 @@ def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_s
         param_group['lr'] = lr
     return lr
 
-
+# COCO or VOC
 def get_dataloader(cfg, dataset, setname='train_sets'):
     _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
-    Dataloader_function = {'VOC': VOCDetection, 'COCO':COCODetection, 'custom':MyCustomDetection.CustomDetection}
+    Dataloader_function = {'VOC': VOCDetection, 'COCO':COCODetection}
     _Dataloader_function = Dataloader_function[dataset]
     
     if dataset == 'COCO':
         root = cfg.COCOroot
     elif dataset == 'VOC':
         root = cfg.VOCroot
-    else:
-        root = '.'
     
     if dataset == 'COCO':
         insetName = getattr(cfg.dataset, dataset)[setname]
     elif dataset == 'VOC':
         insetName = getattr(cfg.dataset, dataset)[setname]
-    else:
-        insetName = ''
-    
 
     if setname == 'train_sets':
         dataset = _Dataloader_function(root, insetName, _preproc)
@@ -111,7 +106,22 @@ def get_dataloader(cfg, dataset, setname='train_sets'):
         dataset = _Dataloader_function(root, insetName, None)
 
     return dataset
+
+def get_dataloaderCustom(cfg, setname='train_sets'):
+
+    _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
+    Dataloader_function = {'custom':MyCustomDetection.CustomDetection}
+    _Dataloader_function = Dataloader_function[dataset]
     
+    if setname == 'train_sets':
+         root = '/srv/data/kuwingto/SAEcustomData/train'
+         dataset = MyCustomDetection.CustomDetection(root, _preproc)
+    else:
+        root = '/srv/data/kuwingto/SAEcustomData/val'
+        dataset = MyCustomDetection.CustomDetection(root, None)
+
+    return dataset
+
 def print_train_log(iteration, print_epochs, info_list):
     if iteration % print_epochs == 0:
         cprint('Time:{}||Epoch:{}||EpochIter:{}/{}||Iter:{}||Loss_L:{:.4f}||Loss_C:{:.4f}||Batch_Time:{:.4f}||LR:{:.7f}'.format(*info_list), 'green')

@@ -71,7 +71,14 @@ if __name__ == '__main__':
         dataset = get_dataloader(cfg, args.dataset, 'train_sets')
     else:
         dataset = get_dataloaderCustom(cfg, 'train_sets')
-    print("dataset len = {}".format(len(dataset)))
+    print("train dataset len = {}".format(len(dataset)))
+
+    ################ get val dataset ################
+    if (args.dataset == "COCO" or args.dataset == "VOC"):
+        testdataset = get_dataloader(cfg, args.dataset, 'test_sets')
+    else:
+        testdataset = get_dataloaderCustom(cfg, 'test_sets')
+    print("test dataset len = {}".format(len(testdataset)))
 
     ################ get dataset param ################
     epoch_size = len(dataset) // (cfg.train_cfg.per_batch_size * args.ngpu)
@@ -100,6 +107,30 @@ if __name__ == '__main__':
             if epoch % cfg.model.save_eposhs == 0:
                 save_checkpoint(net, cfg, final=False, datasetname = args.dataset, epoch=epoch)
             epoch += 1
+
+            ################ validation script here #####################
+            aver_val_loss = 0
+            val_count = 0
+            for iteration in range(0, len(testdataset)):
+                val_batch_iterator = iter(data.DataLoader(testdataset, 
+                                                        1 , 
+                                                        shuffle=false, 
+                                                        num_workers = 0, 
+                                                        collate_fn=detection_collate))
+                val_images, val_targets = next(val_batch_iterator)
+                if cfg.train_cfg.cuda:
+                    val_images = val_images.cuda()
+                    val_targets = [anno.cuda() for anno in val_targets]
+        
+                ########### forward ############
+                val_out = net(val_images)
+                val_loss_l, val_loss_c = criterion(val_out, priors, val_targets)
+                val_loss = val_loss_l + val_loss_c
+                aver_val_loss = aver_val_loss + val_loss
+                val_count = val_count + 1
+            aver_val_loss = aver_val_loss/val_count
+            print_info('val loss = ' + aver_val_loss, ['red','bold'])
+            ##############################################################
         
        ######## Each step update ############
         load_t0 = time.time()
