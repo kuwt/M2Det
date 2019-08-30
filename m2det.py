@@ -116,6 +116,8 @@ class M2Det(nn.Module):
                     base_feats.append(x)
         elif 'res' in self.net_family:
             base_feats = self.base(x, self.base_out)
+
+        # base feature formed
         base_feature = torch.cat(
                 (self.reduce(base_feats[0]), F.interpolate(self.up_reduce(base_feats[1]),scale_factor=2,mode='nearest')),1
                 )
@@ -141,6 +143,9 @@ class M2Det(nn.Module):
             for i,tmp in enumerate(tum_outs[0]):
                 print("tum_outs[0][{}].size() = {}".format(i,tmp.size()))
             #print("tum_outs[0].size() = {}".format(tum_outs[0].size()))
+            #a = tum_outs[0][5].sum(1).sum(0)
+            #print("a.size() = {}".format(a.size()))
+            #print("a= {}".format(a))    
             with torch.no_grad():
                 for i,to in enumerate(tum_outs):
                     for j,f in enumerate(to):
@@ -148,9 +153,7 @@ class M2Det(nn.Module):
                         featureMapPlot = sumMap.cpu().detach().numpy()
                         saveName = "tmp/activation/scale_{}_level_{}.png".format(j,i)
                         matplotlib.image.imsave(saveName, featureMapPlot)
-            #a = tum_outs[0][5].sum(1).sum(0)
-            #print("a.size() = {}".format(a.size()))
-            #print("a= {}".format(a))    
+           
     
         # concat with same scales
         sources = [torch.cat([_fx[i-1] for _fx in tum_outs],1) for i in range(self.num_scales, 0, -1)]
@@ -165,6 +168,7 @@ class M2Det(nn.Module):
             sources = self.sfam_module(sources)
         sources[0] = self.Norm(sources[0])
         
+        # prediction convolution 
         for (x,l,c) in zip(sources, self.loc, self.conf):
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
             conf.append(c(x).permute(0, 2, 3, 1).contiguous())
@@ -175,6 +179,7 @@ class M2Det(nn.Module):
             print("loc[0] = {}".format(loc[0].size()))
             print("conf[0].size() = {}".format(conf[0].size()))
 
+        # redimension
         loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
         conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
 
@@ -183,6 +188,7 @@ class M2Det(nn.Module):
             print("loc.size() = {}".format(loc.size()))
             print("conf.size() = {}".format(conf.size()))
         
+         # final softmax if test
         if self.phase == "test":
             output = (
                 loc.view(loc.size(0), -1, 4),                   # loc preds
