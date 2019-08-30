@@ -32,6 +32,7 @@ class CustomDetection(data.Dataset):
                 folders.append(os.path.join(r, folder))
                 names.append(folder)
         
+        print("folders first 5= ")
         for i,folder in enumerate(folders):
             if i >= 5:
                 break
@@ -52,11 +53,13 @@ class CustomDetection(data.Dataset):
                 groupAnnotation[i][4] = classMap(groupAnnotation[i][4])
             self.annotations.append(groupAnnotation);
 
+        print("imageId first 5 = ")
         for i,id in enumerate(self.ids):
             if i >= 5:
                 break
             print(id)        
 
+        print("annotations first 5 = ")
         for i,anno in enumerate(self.annotations):
             if i >= 5:
                 break

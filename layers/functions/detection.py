@@ -25,7 +25,7 @@ class Detect(Function):
                 Shape: [batch,num_priors*4]
             conf_data: (tensor) Shape: Conf preds from conf layers
                 Shape: [batch*num_priors,num_classes]
-            prior_data: (tensor) Prior boxes and variances from priorbox layers
+            prior_data: (tensor) Prior boxes but not variance from priorbox layers
                 Shape: [1,num_priors,4]
         """
 

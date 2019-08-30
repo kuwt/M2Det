@@ -69,16 +69,20 @@ if __name__ == '__main__':
     dataset = get_dataloader(cfg, args.dataset, 'train_sets')
     print("dataset len = {}".format(len(dataset)))
 
+    ################ get dataset param ################
     epoch_size = len(dataset) // (cfg.train_cfg.per_batch_size * args.ngpu)
     max_iter = getattr(cfg.train_cfg.step_lr,args.dataset)[-1] * epoch_size
     stepvalues = [_*epoch_size for _ in getattr(cfg.train_cfg.step_lr, args.dataset)[:-1]]
-    print_info('===> Training M2Det on ' + args.dataset, ['yellow','bold'])
     step_index = 0
     if args.resume_epoch > 0:
         start_iter = args.resume_epoch * epoch_size
     else:
         start_iter = 0
-
+    
+    print("start_iter, max_iter = {} , {}".format(start_iter,max_iter))
+    print ("epoch size = {}".format(epoch_size))
+    
+    print_info('===> Training M2Det on ' + args.dataset, ['yellow','bold'])
     ############## train loop ##############
     for iteration in range(start_iter, max_iter):
         

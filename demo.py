@@ -42,6 +42,7 @@ init_net(net, cfg, args.trained_model)
 print_info('===> Finished constructing and loading model',['yellow','bold'])
 net.eval()
 
+ ##################### put to GPU #############################
 with torch.no_grad():
     priors = priorbox.forward()
     if cfg.test_cfg.cuda:
@@ -50,11 +51,16 @@ with torch.no_grad():
         cudnn.benchmark = True
     else:
         net = net.cpu()
+print("priors size = {}".format(priors.size()))
+print("priors = {}".format(priors))
+
+ ##################### preprocess #############################
 _preprocess = BaseTransform(cfg.model.input_size, cfg.model.rgb_means, (2, 0, 1))
 
  ##################### detector #############################
 detector = Detect(cfg.model.m2det_config.num_classes, cfg.loss.bkg_label, anchor_config)
 
+ ##################### utilities #############################
 def _to_color(indx, base):
     """ return (b, r, g) tuple"""
     base2 = base * base
@@ -79,7 +85,8 @@ def draw_detection(im, bboxes, scores, cls_inds, fps, thr=0.2):
         cv2.rectangle(imgcv,
                       (box[0], box[1]), (box[2], box[3]),
                       colors[cls_indx], thick)
-        mess = '%s: %.3f' % (labels[cls_indx], scores[i])
+       # mess = '%s: %.3f' % (labels[cls_indx], scores[i])
+        mess = '%s: %.3f' % (cls_indx, scores[i])
         cv2.putText(imgcv, mess, (box[0], box[1] - 7),
                     0, 1e-3 * h, colors[cls_indx], thick // 3)
         if fps >= 0:
@@ -102,7 +109,8 @@ while True:
         break
     if 'm2det' in fname: continue # ignore the detected images
     image = cv2.imread(fname, cv2.IMREAD_COLOR)
-    print("image {}".format(fname))
+    print_info('===> image',['yellow','bold'])
+    print("image path = {}".format(fname))
     ########### preprocess ############
     loop_start = time.time()
     w,h = image.shape[1],image.shape[0]
@@ -116,9 +124,12 @@ while True:
     scale = torch.Tensor([w,h,w,h])
     out = net(img)
     boxes, scores = detector.forward(out, priors)
+    print("box size = {}".format(boxes.size()))
+    print("score size = {}".format(scores.size()))    
+
     boxes = (boxes[0]*scale).cpu().numpy()
     scores = scores[0].cpu().numpy()
-
+    #print("boxes = {}".format(boxes))
     ########### bbox ############
     allboxes = []
     for j in range(1, cfg.model.m2det_config.num_classes):
@@ -140,9 +151,11 @@ while True:
     boxes = allboxes[:,:4]
     scores = allboxes[:,4]
     cls_inds = allboxes[:,5]
+    print_info('===> Result',['yellow','bold'])
+    #print('\n'.join(['pos:{}, ids:{}, score:{:.3f}'.format('(%.1f,%.1f,%.1f,%.1f)' % (o[0],o[1],o[2],o[3]) \
+    #        ,labels[int(oo)],ooo) for o,oo,ooo in zip(boxes,cls_inds,scores)]))
     print('\n'.join(['pos:{}, ids:{}, score:{:.3f}'.format('(%.1f,%.1f,%.1f,%.1f)' % (o[0],o[1],o[2],o[3]) \
-            ,labels[int(oo)],ooo) for o,oo,ooo in zip(boxes,cls_inds,scores)]))
- 
+            ,int(oo),ooo) for o,oo,ooo in zip(boxes,cls_inds,scores)]))
     im2show = draw_detection(image, boxes, scores, cls_inds, 0)
     # print bbox_pred.shape, iou_pred.shape, prob_pred.shape
 

@@ -34,7 +34,7 @@ train_cfg = dict(
     step_lr = dict(
         COCO = [90, 110, 130, 150, 160],
         VOC = [100, 150, 200, 250, 300], # unsolve
-        custom = [90, 110, 130, 150, 160],
+        custom = [90, 110, 130, 150, 300],
         ),
     print_epochs = 10,
     num_workers= 8,

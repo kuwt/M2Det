@@ -74,13 +74,17 @@ class TUM(nn.Module):
             #return nn.ConvTranspose2d(16, 16, 3, stride=2, padding=1)
 
     def forward(self, x, y):
-        if not self.first_level:
+        if not self.first_level: # part of FFMv2
             x = torch.cat([x,y],1)
         conved_feat = [x]
         for i in range(len(self.layers)):
             x = self.layers[i](x)
             conved_feat.append(x)
         
+        ## add display
+        for i,tmp in enumerate(conved_feat):
+            print("conved_feat[{}].size() = {}".format(i,tmp.size()))
+
         deconved_feat = [self.toplayer[0](conved_feat[-1])]
         for i in range(len(self.latlayer)):
             deconved_feat.append(
@@ -88,6 +92,11 @@ class TUM(nn.Module):
                         deconved_feat[i], self.latlayer[i](conved_feat[len(self.layers)-1-i])
                         )
                     )
+
+        ## add display
+        for i,tmp in enumerate(deconved_feat):
+            print("deconved_feat[{}].size() = {}".format(i,tmp.size()))
+
         if self.is_smooth:
             smoothed_feat = [deconved_feat[0]]
             for i in range(len(self.smooth)):

@@ -1,3 +1,4 @@
+COMMANDS
 // training
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --ngpu 4
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/M2Det_COCO_size512_netvgg16_epoch30.pth --ngpu 4
@@ -11,15 +12,48 @@ python test.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth
 python demo.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth
 python demo.py -c=configs/m2det512_vgg.py -m=weights/M2Det_custom_size512_netvgg16_epoch150.pth
 
+
+
+QUESTIONS:
 Q. when change image size from arbitrary to 512 x 512?
 A. in preproc
 
-Q. how to handle no target box
+Q. how to handle no target box?
+
 
 Q. Why the offical check pt cost is much lower than mine?
 
-Q. How to verify the result.
 
-Next:
+Q. How to verify the result?
+A. by demo script
+
+Q. what is the intuitive meaning of score?
+A. It is the prediction of network(softmax?)
+
+Q. what is the warning log (Errno 104 connection reset by peer)when switching epoch?
+A. pytorch official report that this is a bug and can be ignored
+
+Q. why my dataset has a much lower cost?
+A.
+
+Q. WHat is the meaning of variance of anchor box
+A. A normalization constant for better machine learning as claimed here 
+    https://leimao.github.io/blog/Bounding-Box-Encoding-Decoding/
+
+
+network component:
+self.base
+self.reduce
+self.up_reduce
+self.softmax
+self.Norm
+self.leach
+self.loc
+self.conf
+self.sfam_module
+
+
+
+Next plan:
 tensorboard
-custom dataset
+custom dataset (done)

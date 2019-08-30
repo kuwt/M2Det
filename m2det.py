@@ -69,6 +69,8 @@ class M2Det(nn.Module):
             self.base = get_backbone(self.backbone)
             shallow_in, shallow_out = 512,256
             deep_in, deep_out = 2048,512
+
+        # for FFMv1
         self.reduce= BasicConv(shallow_in, shallow_out, kernel_size=3, stride=1, padding=1)
         self.up_reduce= BasicConv(deep_in, deep_out, kernel_size=1, stride=1)
         
@@ -76,6 +78,8 @@ class M2Det(nn.Module):
         if self.phase == 'test':
             self.softmax = nn.Softmax()
         self.Norm = nn.BatchNorm2d(256*8)
+
+        # for FFMv2 and the input to TUM
         self.leach = nn.ModuleList([BasicConv(
                     deep_out+shallow_out,
                     self.planes//2,
@@ -112,6 +116,10 @@ class M2Det(nn.Module):
                 (self.reduce(base_feats[0]), F.interpolate(self.up_reduce(base_feats[1]),scale_factor=2,mode='nearest')),1
                 )
 
+        ## add display
+        #print("base_feature = {}".format(base_feature))
+        print("base_feature size = {}".format(base_feature.size()))
+
         # tum_outs is the multi-level multi-scale feature
         tum_outs = [getattr(self, 'unet{}'.format(1))(self.leach[0](base_feature), 'none')]
         for i in range(1,self.num_levels,1):
@@ -120,9 +128,21 @@ class M2Det(nn.Module):
                         self.leach[i](base_feature), tum_outs[i-1][-1]
                         )
                     )
+
+        ## add display
+        print("len(tum_outs)= {}".format(len(tum_outs)))
+        print("len(tum_outs[0])= {}".format(len(tum_outs[0])))
+        for i,tmp in enumerate(tum_outs[0]):
+            print("tum_outs[0][{}].size() = {}".format(i,tmp.size()))
+        #print("tum_outs[0].size() = {}".format(tum_outs[0].size()))
+    
         # concat with same scales
         sources = [torch.cat([_fx[i-1] for _fx in tum_outs],1) for i in range(self.num_scales, 0, -1)]
         
+         ## add display
+        #print("sources[0] = {}".format(sources[0]))
+        print("sources[0].size() = {}".format(sources[0].size()))
+
         # forward_sfam
         if self.sfam:
             sources = self.sfam_module(sources)
@@ -132,9 +152,18 @@ class M2Det(nn.Module):
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
             conf.append(c(x).permute(0, 2, 3, 1).contiguous())
 
+         ## add display
+        print("len(loc) = {}".format(len(loc)))
+        print("loc[0] = {}".format(loc[0].size()))
+        print("conf[0].size() = {}".format(conf[0].size()))
+
         loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
         conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
 
+        ## add display
+        print("loc.size() = {}".format(loc.size()))
+        print("conf.size() = {}".format(conf.size()))
+        
         if self.phase == "test":
             output = (
                 loc.view(loc.size(0), -1, 4),                   # loc preds
