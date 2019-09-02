@@ -110,8 +110,6 @@ def get_dataloader(cfg, dataset, setname='train_sets'):
 def get_dataloaderCustom(cfg, setname='train_sets'):
 
     _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
-    Dataloader_function = {'custom':MyCustomDetection.CustomDetection}
-    _Dataloader_function = Dataloader_function[dataset]
     
     if setname == 'train_sets':
          root = '/srv/data/kuwingto/SAEcustomData/train'
