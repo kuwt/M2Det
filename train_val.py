@@ -28,7 +28,8 @@ print_info('--------------------------------------------------------------------
            '|                       M2Det Training Program                       |\n'
            '----------------------------------------------------------------------',['yellow','bold'])
 
-logger = set_logger(args.tensorboard)
+logger = set_logger(args.tensorboard,"train")
+logger_val = set_logger(args.tensorboard,"val")
 
  ##################### config #############################
 global cfg
@@ -109,27 +110,32 @@ if __name__ == '__main__':
             epoch += 1
 
             ################ validation script here #####################
-            aver_val_loss = 0
-            val_count = 0
-            for iteration in range(0, len(testdataset)):
-                val_batch_iterator = iter(data.DataLoader(testdataset, 
-                                                        1 , 
-                                                        shuffle=false, 
-                                                        num_workers = 0, 
-                                                        collate_fn=detection_collate))
-                val_images, val_targets = next(val_batch_iterator)
-                if cfg.train_cfg.cuda:
-                    val_images = val_images.cuda()
-                    val_targets = [anno.cuda() for anno in val_targets]
-        
+            with torch.no_grad():
+                aver_val_loss = 0
+                val_count = 0
+                val_max_iter = len(testdataset) // args.ngpu
+                for val_iteration in range(val_max_iter):
+                    val_batch_iterator = iter(data.DataLoader(testdataset, 
+                                                            1 * args.ngpu,
+                                                            shuffle=False, 
+                                                            num_workers = 0,
+                                                            collate_fn=detection_collate))
+                    val_images, val_targets = next(val_batch_iterator)
+                    if cfg.train_cfg.cuda:
+                        val_images = val_images.cuda()
+                        val_targets = [anno.cuda() for anno in val_targets]
                 ########### forward ############
-                val_out = net(val_images)
-                val_loss_l, val_loss_c = criterion(val_out, priors, val_targets)
-                val_loss = val_loss_l + val_loss_c
-                aver_val_loss = aver_val_loss + val_loss
-                val_count = val_count + 1
-            aver_val_loss = aver_val_loss/val_count
-            print_info('val loss = ' + aver_val_loss, ['red','bold'])
+                    val_out = net(val_images)
+                    val_loss_l, val_loss_c = criterion(val_out, priors, val_targets)
+                    val_loss = val_loss_l + val_loss_c
+                    aver_val_loss = aver_val_loss + val_loss
+                    val_count = val_count + 1
+
+                aver_val_loss = aver_val_loss/val_count
+                aver_val_loss = aver_val_loss.cpu().numpy()
+                print_info('val loss = ', ['red','bold'])
+                print(aver_val_loss)
+                write_logger({'loss':aver_val_loss.item()},logger_val,iteration,status=args.tensorboard)
             ##############################################################
         
        ######## Each step update ############

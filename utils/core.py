@@ -16,11 +16,11 @@ from termcolor import cprint
 from utils.nms_wrapper import nms
 import numpy as np
 
-def set_logger(status):
+def set_logger(status, strSet = ""):
     if status:
         from logger import Logger
         date = time.strftime("%m_%d_%H_%M") + '_log'
-        log_path = './logs/'+ date
+        log_path = './logs/'+ strSet + date
         if os.path.exists(log_path):
             shutil.rmtree(log_path)
         os.makedirs(log_path)
@@ -116,7 +116,7 @@ def get_dataloaderCustom(cfg, setname='train_sets'):
          dataset = MyCustomDetection.CustomDetection(root, _preproc)
     else:
         root = '/srv/data/kuwingto/SAEcustomData/val'
-        dataset = MyCustomDetection.CustomDetection(root, None)
+        dataset = MyCustomDetection.CustomDetection(root, _preproc)
 
     return dataset
 
