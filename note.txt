@@ -1,14 +1,18 @@
 COMMANDS
-// training
+/***** training *********/
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --ngpu 4
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/M2Det_COCO_size512_netvgg16_epoch30.pth --ngpu 4
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4
 CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4 --dataset custom -t True
 
-// evaluation
+/******** training + validation *********/
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train_val.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4 --dataset custom
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train_val.py -c=configs/m2det512_vgg.py --resume_net weights/m2det512_vgg.pth --ngpu 4 --dataset custom -t True
+
+/********** evaluation *****************/
 python test.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth 
 
-//demo
+/************ demo ******************/
 python demo.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth
 python demo.py -c=configs/m2det512_vgg.py -m=weights/M2Det_custom_size512_netvgg16_epoch150.pth
 
@@ -60,8 +64,8 @@ self.sfam_module
 
 
 Next plan:
-tensorboard setup
+tensorboard setup (done)
 understand the network component (done)
 print anchor box size relative to images (already illustrated in the Anchor info)
 print multi level multi scale feature activation map (done)
-add validation set for the training script
+add validation set for the training script (done)
