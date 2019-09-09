@@ -74,5 +74,5 @@ dataset = dict(
 
 import os
 home = os.path.expanduser("~")
-VOCroot = os.path.join(home,"data/VOCdevkit/")
-COCOroot = os.path.join(home,"data/coco/")
+VOCroot = "/srv/data/kuwingto/data/VOCdevkit/"
+COCOroot = "/srv/data/kuwingto/data/coco/"

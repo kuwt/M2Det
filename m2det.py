@@ -10,7 +10,7 @@ Finished Date:  01/17/2019
 
 '''
 
-isPrintLog = True
+isPrintLog = False
 import matplotlib
 
 import torch

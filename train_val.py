@@ -69,16 +69,16 @@ if __name__ == '__main__':
     ################ get training dataset ################
     print("dataset = {}".format(args.dataset)) 
     if (args.dataset == "COCO" or args.dataset == "VOC"):
-        dataset = get_dataloader(cfg, args.dataset, 'train_sets')
+        dataset = get_dataloaderTrainVal(cfg, args.dataset, 'train_sets')
     else:
-        dataset = get_dataloaderCustom(cfg, 'train_sets')
+        dataset = get_dataloaderTrainOrTrainValCustomSet(cfg, 'train_sets')
     print("train dataset len = {}".format(len(dataset)))
 
     ################ get val dataset ################
     if (args.dataset == "COCO" or args.dataset == "VOC"):
-        testdataset = get_dataloader(cfg, args.dataset, 'test_sets')
+        testdataset = get_dataloaderTrainVal(cfg, args.dataset, 'eval_sets')
     else:
-        testdataset = get_dataloaderCustom(cfg, 'test_sets')
+        testdataset = get_dataloaderTrainOrTrainValCustomSet(cfg, 'eval_sets')
     print("test dataset len = {}".format(len(testdataset)))
 
     ################ get dataset param ################
@@ -111,28 +111,20 @@ if __name__ == '__main__':
 
             ################ validation script here #####################
             with torch.no_grad():
-                aver_val_loss = 0
-                val_count = 0
-                val_max_iter = len(testdataset) // args.ngpu
-                for val_iteration in range(val_max_iter):
-                    val_batch_iterator = iter(data.DataLoader(testdataset, 
-                                                            1 * args.ngpu,
-                                                            shuffle=False, 
-                                                            num_workers = 0,
-                                                            collate_fn=detection_collate))
-                    val_images, val_targets = next(val_batch_iterator)
-                    if cfg.train_cfg.cuda:
-                        val_images = val_images.cuda()
-                        val_targets = [anno.cuda() for anno in val_targets]
-                ########### forward ############
-                    val_out = net(val_images)
-                    val_loss_l, val_loss_c = criterion(val_out, priors, val_targets)
-                    val_loss = val_loss_l + val_loss_c
-                    aver_val_loss = aver_val_loss + val_loss
-                    val_count = val_count + 1
-
-                aver_val_loss = aver_val_loss/val_count
-                aver_val_loss = aver_val_loss.cpu().numpy()
+                val_batch_iterator = iter(data.DataLoader(testdataset, 
+                                                        cfg.train_cfg.per_batch_size * args.ngpu,
+                                                        shuffle=True, 
+                                                        num_workers = 0,
+                                                        collate_fn=detection_collate))
+                val_images, val_targets = next(val_batch_iterator)
+                if cfg.train_cfg.cuda:
+                    val_images = val_images.cuda()
+                    val_targets = [anno.cuda() for anno in val_targets]
+            ########### forward ############
+                val_out = net(val_images)
+                val_loss_l, val_loss_c = criterion(val_out, priors, val_targets)
+                val_loss = val_loss_l + val_loss_c
+                aver_val_loss = val_loss.cpu().numpy()
                 print_info('val loss = ', ['red','bold'])
                 print(aver_val_loss)
                 write_logger({'loss':aver_val_loss.item()},logger_val,iteration,status=args.tensorboard)

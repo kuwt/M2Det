@@ -27,7 +27,7 @@ class COCODetection(data.Dataset):
     def __init__(self, root, image_sets, preproc=None, target_transform=None,
                  dataset_name='COCO'):
         self.root = root
-        self.data_path = os.path.join(os.path.expanduser("~"),'data')
+        self.data_path = self.root
         self.cache_path = os.path.join(self.data_path, 'coco_cache')
         self.image_set = image_sets
         self.preproc = preproc
@@ -35,7 +35,9 @@ class COCODetection(data.Dataset):
         self.name = dataset_name
         self.ids = list()       # it is a list of strings
         self.annotations = list() # it is list of numpy.ndarray
-        self._view_map = {
+        # this view_map pick which images sets to choose according to the specified name
+        # Note that image set and annotation set are two different things.
+        self._view_map = { 
             'minival2014' : 'val2014',          # 5k val2014 subset
             'valminusminival2014' : 'val2014',  # val2014 \setminus minival2014
             'test-dev2015' : 'test2015',

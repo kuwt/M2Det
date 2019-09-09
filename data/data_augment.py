@@ -212,7 +212,53 @@ class preproc(object):
 
         return torch.from_numpy(image_t), targets_t
 
+class preprocNoAugment(object):
 
+    def __init__(self, resize, rgb_means, p):
+        self.means = rgb_means
+        self.resize = resize
+        self.p = p
+
+    def __call__(self, image, targets):
+        boxes = targets[:,:-1].copy()
+        labels = targets[:,-1].copy()
+        if len(boxes) == 0:
+            #boxes = np.empty((0, 4))
+            targets = np.zeros((1,5))
+            image = preproc_for_test(image, self.resize, self.means)
+            return torch.from_numpy(image), targets
+
+        image_o = image.copy()
+        targets_o = targets.copy()
+        height_o, width_o, _ = image_o.shape
+        boxes_o = targets_o[:,:-1]
+        labels_o = targets_o[:,-1]
+        boxes_o[:, 0::2] /= width_o
+        boxes_o[:, 1::2] /= height_o
+        labels_o = np.expand_dims(labels_o,1)
+        targets_o = np.hstack((boxes_o,labels_o))
+
+        image_t = image
+
+        height, width, _ = image_t.shape
+        image_t = preproc_for_test(image_t, self.resize, self.means)
+        boxes = boxes.copy()
+        boxes[:, 0::2] /= width
+        boxes[:, 1::2] /= height
+        b_w = (boxes[:, 2] - boxes[:, 0])*1.
+        b_h = (boxes[:, 3] - boxes[:, 1])*1.
+        mask_b= np.minimum(b_w, b_h) > 0.01
+        boxes_t = boxes[mask_b]
+        labels_t = labels[mask_b].copy()
+
+        if len(boxes_t)==0:
+            image = preproc_for_test(image_o, self.resize, self.means)
+            return torch.from_numpy(image),targets_o
+
+        labels_t = np.expand_dims(labels_t,1)
+        targets_t = np.hstack((boxes_t,labels_t))
+
+        return torch.from_numpy(image_t), targets_t
 
 class BaseTransform(object):
     """Defines the transformations that should be applied to test PIL image

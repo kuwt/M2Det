@@ -70,7 +70,7 @@ if __name__ == '__main__':
     if (args.dataset == "COCO" or args.dataset == "VOC"):
         dataset = get_dataloader(cfg, args.dataset, 'train_sets')
     else:
-        dataset = get_dataloaderCustom(cfg, 'train_sets')
+        dataset = get_dataloaderTrainOrTrainValCustomSet(cfg, 'train_sets')
     print("dataset len = {}".format(len(dataset)))
 
     ################ get dataset param ################

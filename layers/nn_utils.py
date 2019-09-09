@@ -1,4 +1,4 @@
-isPrintLog = True
+isPrintLog = False
 
 import torch
 import torch.nn as nn

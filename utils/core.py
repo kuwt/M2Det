@@ -9,7 +9,7 @@ import torch.backends.cudnn as cudnn
 from layers.functions import PriorBox
 from layers.modules import MultiBoxLoss
 from data import mk_anchors
-from data import COCODetection, VOCDetection, detection_collate, preproc
+from data import COCODetection, VOCDetection, detection_collate, preproc, preprocNoAugment
 from data import MyCustomDetection
 from configs.CC import Config
 from termcolor import cprint
@@ -86,10 +86,10 @@ def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_s
 
 # COCO or VOC
 def get_dataloader(cfg, dataset, setname='train_sets'):
-    _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
     Dataloader_function = {'VOC': VOCDetection, 'COCO':COCODetection}
     _Dataloader_function = Dataloader_function[dataset]
-    
+    _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
+
     if dataset == 'COCO':
         root = cfg.COCOroot
     elif dataset == 'VOC':
@@ -107,14 +107,36 @@ def get_dataloader(cfg, dataset, setname='train_sets'):
 
     return dataset
 
-def get_dataloaderCustom(cfg, setname='train_sets'):
-
-    _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
+def get_dataloaderTrainVal(cfg, dataset, setname='train_sets'):
+    Dataloader_function = {'VOC': VOCDetection, 'COCO':COCODetection}
+    _Dataloader_function = Dataloader_function[dataset]
     
+    if dataset == 'COCO':
+        root = cfg.COCOroot
+    elif dataset == 'VOC':
+        root = cfg.VOCroot
+    
+    if dataset == 'COCO':
+        insetName = getattr(cfg.dataset, dataset)[setname]
+    elif dataset == 'VOC':
+        insetName = getattr(cfg.dataset, dataset)[setname]
+
     if setname == 'train_sets':
+        _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
+        dataset = _Dataloader_function(root, insetName, _preproc)
+    else:
+        _preproc = preprocNoAugment(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
+        dataset = _Dataloader_function(root, insetName, _preproc)
+
+    return dataset
+
+def get_dataloaderTrainOrTrainValCustomSet(cfg, setname='train_sets'):
+    if setname == 'train_sets':
+         _preproc = preprocNoAugment(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
          root = '/srv/data/kuwingto/SAEcustomData/train'
          dataset = MyCustomDetection.CustomDetection(root, _preproc)
     else:
+        _preproc = preprocNoAugment(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
         root = '/srv/data/kuwingto/SAEcustomData/val'
         dataset = MyCustomDetection.CustomDetection(root, _preproc)
 

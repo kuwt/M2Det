@@ -15,7 +15,7 @@ python test.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth
 /************ demo ******************/
 python demo.py -c=configs/m2det512_vgg.py -m=weights/m2det512_vgg.pth
 python demo.py -c=configs/m2det512_vgg.py -m=weights/M2Det_custom_size512_netvgg16_epoch150.pth
-
+python demo.py -c=configs/m2det512_vgg.py -m=weights/M2Det_custom_size512_netvgg16_epoch210.pth
 
 
 QUESTIONS:
@@ -69,3 +69,4 @@ understand the network component (done)
 print anchor box size relative to images (already illustrated in the Anchor info)
 print multi level multi scale feature activation map (done)
 add validation set for the training script (done)
+tune anchor box size and feature map size

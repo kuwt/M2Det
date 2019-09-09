@@ -78,6 +78,8 @@ class CustomDetection(data.Dataset):
 
         if self.preproc is not None:
             img, adjustTarget = self.preproc(img, adjustTarget)
+            # print("img = ", img)
+            #print("adjustTarget = ", adjustTarget)
 
         return img, adjustTarget
 
