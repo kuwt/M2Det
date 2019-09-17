@@ -94,6 +94,23 @@ def draw_detection(im, bboxes, scores, cls_inds, fps, thr=0.2):
 
     return imgcv
 
+def draw_detection_no_text(im, bboxes, scores, cls_inds, fps, thr=0.2):
+    imgcv = np.copy(im)
+    h, w, _ = imgcv.shape
+    for i, box in enumerate(bboxes):
+        if scores[i] < thr:
+            continue
+        cls_indx = int(cls_inds[i])
+        box = [int(_) for _ in box]
+        thick = int((h + w) / 300)
+        cv2.rectangle(imgcv,
+                      (box[0], box[1]), (box[2], box[3]),
+                      colors[cls_indx], thick)
+        mess = '%s' % (cls_indx)
+        cv2.putText(imgcv, mess, (box[0], box[1] - 7),
+                    0, 1e-3 * h, colors[cls_indx], thick // 3)
+    return imgcv
+
  ##################### main loop #############################
 im_path = args.directory
 extension = '.bmp'
@@ -159,10 +176,17 @@ while True:
     im2show = draw_detection(image, boxes, scores, cls_inds, 0)
     # print bbox_pred.shape, iou_pred.shape, prob_pred.shape
 
+    im2show2 = draw_detection_no_text(image, boxes, scores, cls_inds, 0)
     if im2show.shape[0] > 1100:
         im2show = cv2.resize(im2show,
                              (int(1000. * float(im2show.shape[1]) / im2show.shape[0]), 1000))
-    
+    if im2show2.shape[0] > 1100:
+        im2show2 = cv2.resize(im2show2,
+                             (int(1000. * float(im2show2.shape[1]) / im2show2.shape[0]), 1000))
+
     outfileName = 'tmp/result/test_{}.jpg'.format(index)
     cv2.imwrite( outfileName, im2show)
+
+    outfileName = 'tmp/result/test_{}_no_text.jpg'.format(index)
+    cv2.imwrite( outfileName, im2show2)
     index = index + 1

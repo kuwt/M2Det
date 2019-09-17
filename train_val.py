@@ -161,7 +161,9 @@ if __name__ == '__main__':
         loss = loss_l + loss_c
         write_logger({'loc_loss':loss_l.item(),
                       'conf_loss':loss_c.item(),
-                      'loss':loss.item()},logger,iteration,status=args.tensorboard)
+                      'loss':loss.item(),
+                      'lr':lr,
+                      'epoch':epoch},logger,iteration,status=args.tensorboard)
 
         ### backward ###
         loss.backward()
